@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+enum Side {
+  LEFT = 0;
+  RIGHT = 1;
+}
+
+message Command {
+  message EngCtl {
+    Side side = 1;
+    float value = 2;
+  }
+  oneof cmd {
+    EngCtl setPWM = 1;
+    EngCtl setSpeed = 2;
+  }
+}
+
+message Feedback {
+  message WheelState {
+    Side side = 1;
+    float speed = 2;
+    float mileage = 3;
+  }
+  oneof fb {
+    WheelState wheelState = 1;
+  }
+}
+
+message ConfigPID {
+  float p = 1;
+  float i = 2;
+  float d = 3;
+  float minOut = 4;
+  float maxOut = 5;
+}
+
+message Config {
+  float ticksPerSec = 1;
+  ConfigPID pid = 2;
+}
+
+// EmitUDP.cpp
+message Point2D {
+  float x = 1;
+  float y = 2;
+}

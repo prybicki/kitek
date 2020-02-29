@@ -1,0 +1,31 @@
+loopHz: 40
+pid: {
+  p: 12.0,
+  i: 4.0,
+  d: 0.0,
+  min: -1.0,
+  max: 1.0,
+}
+
+engL: {
+  in1: 22,
+  in2: 27,
+  enb: 17,
+  rev: false
+}
+
+engR: {
+  in1: 9,
+  in2: 10,
+  enb: 11,
+  rev: true,
+}
+
+encL: {
+  
+}
+
+encR: {
+  
+}
+# TODO: pins could be defined here
