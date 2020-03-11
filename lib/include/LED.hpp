@@ -14,12 +14,12 @@ private:
 
 struct LED_RGB
 {
-	LED_RGB(int pinR, int pinG, int pinB);
+	LED_RGB(LED* ledR, LED* ledG, LED* ledB);
 
 	void setRGB(float r, float g, float b);
 	void setHSV(float h, float s, float v);
-
-	LED ledR;
-	LED ledG;
-	LED ledB;
+private:
+	LED* ledR;
+	LED* ledG;
+	LED* ledB;
 };

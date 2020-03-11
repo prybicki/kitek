@@ -14,7 +14,7 @@ struct PID
 	uint32_t lastUpdate = 0.0f;
 
 	PID(float p, float i, float d, float min, float max);
-	float update(float target, float current);
+	float compute(float target, float current);
 	void config(float p, float i, float d);
 	void reset();
 };

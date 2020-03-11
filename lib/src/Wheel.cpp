@@ -1,8 +1,9 @@
 #include <Wheel.hpp>
 #include <pigpio.h>
 #include <cmath>
+#include <fmt/format.h>
 
-Wheel::Wheel(float ticksPerRev, float wheelDiameter, float maxSpeed, PID* pid, L298N* eng, Encoder* enc)
+Wheel::Wheel(int ticksPerRev, float wheelDiameter, float maxSpeed, PID* pid, L298N* eng, Encoder* enc)
         : ticksPerRev(ticksPerRev), wheelDiameter(wheelDiameter), maxSpeed(maxSpeed), pid(pid), eng(eng),  enc(enc)
 { }
 
@@ -10,6 +11,10 @@ void Wheel::tick() {
     prevState = currState;
     currState = enc->getTicks();
     diff = currState - prevState;
+    if (targetSpeedSI.has_value()) {
+        auto pwm = pid->compute(*targetSpeedSI, getSpeed());
+        eng->setPWM(pwm);
+    }
 }
 
 float Wheel::getMileage() // milleage
@@ -31,8 +36,29 @@ float Wheel::ticksToDist(int ticks) {
     return wheelDiameter * M_PI * static_cast<float>(ticks) / ticksPerRev;
 }
 
+#include <fmt/format.h>
 void Wheel::setSpeed(float speed)
 {
-    float pwm = pid->update(speed * maxSpeed, getSpeed());
+    if (fabs(speed) < 0.01f) {
+        speed = 0.0f;
+    }
+    targetSpeedSI = speed * maxSpeed;
+
+}
+
+void Wheel::setPWM(float pwm)
+{
+    targetSpeedSI.reset();
+    pid->reset();
     eng->setPWM(pwm);
+}
+
+float Wheel::getPWM()
+{
+    return eng->getPWM();
+}
+
+std::optional<float> Wheel::getTargetSpeed()
+{
+    return targetSpeedSI;
 }

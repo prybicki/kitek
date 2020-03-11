@@ -7,7 +7,7 @@ PID::PID(float p, float i, float d, float min, float max) : min(min), max(max), 
     config(p, i, d);
 }
 
-float PID::update(float target, float current) 
+float PID::compute(float target, float current) 
 {
     uint32_t now = gpioTick();
     float dt = 1e-6 * (static_cast<float>(now) - lastUpdate);

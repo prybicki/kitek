@@ -1,31 +1,54 @@
-loopHz: 40
+loopHz: 50
+gpioDebug: False
+
 pid: {
-  p: 12.0,
-  i: 4.0,
+  p: 16.0,
+  i: 24.0,
   d: 0.0,
   min: -1.0,
   max: 1.0,
 }
 
 engL: {
-  in1: 22,
-  in2: 27,
-  enb: 17,
+  pinIn1: 22,
+  pinIn2: 27,
+  pinEnb: 17,
   rev: false
 }
 
 engR: {
-  in1: 9,
-  in2: 10,
-  enb: 11,
+  pinIn1: 9,
+  pinIn2: 10,
+  pinEnb: 11,
   rev: true,
 }
 
 encL: {
-  
+  pinA: 26,
+  pinB: 13,
 }
 
 encR: {
-  
+  pinA: 5,
+  pinB: 6
 }
-# TODO: pins could be defined here
+
+wheel: {
+  ticksPerRev: 3840,
+  diameter: 0.08,
+  maxSpeed: 0.3,
+}
+
+servo: {
+  pin: 8,
+  minAngle: -90,
+  maxAngle: 90,
+  minPulse: 500,
+  maxPulse: 2000,
+}
+
+led: {
+  pinR: 25,
+  pinG: 7,
+  pinB: 8
+}

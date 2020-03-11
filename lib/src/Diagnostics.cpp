@@ -3,8 +3,11 @@
 #include <pigpio.h>
 #include <L298N.hpp>
 #include <KitekHW.hpp>
+#include <Encoder.hpp>
+#include <string>
+#include <Diagnostics.hpp>
 
-void testEngines(KitekHW& hw)
+void Diagnostics::testEngines(KitekHW& hw)
 {
 	const int ENGINE_TEST_SEC = 2;
 	const float ENGINE_TEST_PWM = 0.5f;
@@ -30,8 +33,7 @@ void testEngines(KitekHW& hw)
     hw.engR->setPWM(0);
 }
 
-#include <Encoder.hpp>
-void printEncoders(KitekHW& hw)
+void Diagnostics::printEncoders(KitekHW& hw)
 {
     EncoderTicks ticksL = hw.encL->getTicks();
     EncoderTicks ticksR = hw.encR->getTicks();
@@ -39,17 +41,16 @@ void printEncoders(KitekHW& hw)
     fmt::print("Encoder R: f{} b{} e{}\n", ticksR.forward, ticksR.backward, ticksR.empty);
 }
 
-void testEncoders(KitekHW& hw)
+void Diagnostics::testEncoders(KitekHW& hw)
 {
-    while(!hw.gpio->mustQuit()) {
+    GPIOGuard gpio;
+    while(!gpio.mustQuit()) {
         printEncoders(hw);
         gpioSleep(PI_TIME_RELATIVE, 0, 100 * 1000);
     }
 }
 
-#include <string>
-#include <KitekHW.hpp>
-void runTests(int argc, char** argv, KitekHW& hw)
+void Diagnostics::runTests(int argc, char** argv, KitekHW& hw)
 {
 	for (int i = 1; i < argc; ++i) {
 		if (std::string(argv[i]) == "eng") {
@@ -78,7 +79,7 @@ void runTests(int argc, char** argv, KitekHW& hw)
 
 
 // #include <unordered_map>
-// void testPins(GPIOHandle& gpio, std::initializer_list<int> pins = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27})
+// void testPins(GPIOGuard& gpio, std::initializer_list<int> pins = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27})
 // {
 //     std::unordered_map<int, int> pinToMode;
 //     for(const auto& pin : pins) {
@@ -174,12 +175,12 @@ void runTests(int argc, char** argv, KitekHW& hw)
 // }
 
 
-// void testEncoders(GPIOHandle& gpio, Encoder& l, Encoder& r);
-// void testADC(GPIOHandle& gpio, PCF8591& adc);
+// void testEncoders(GPIOGuard& gpio, Encoder& l, Encoder& r);
+// void testADC(GPIOGuard& gpio, PCF8591& adc);
 // void testHardware(Kitek& hw);
 
 // #include <pigpio.h>
-// void testADC(GPIOHandle& gpio, PCF8591& adc)
+// void testADC(GPIOGuard& gpio, PCF8591& adc)
 // {
 //     while(!gpio.mustQuit()) {
 //         adc.update();

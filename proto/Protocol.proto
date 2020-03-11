@@ -3,41 +3,41 @@ syntax = "proto3";
 enum Side {
   LEFT = 0;
   RIGHT = 1;
+  SIDE_COUNT = 2;
 }
 
-message Command {
-  message EngCtl {
-    Side side = 1;
-    float value = 2;
-  }
-  oneof cmd {
-    EngCtl setPWM = 1;
-    EngCtl setSpeed = 2;
-  }
-}
 
-message Feedback {
-  message WheelState {
-    Side side = 1;
-    float speed = 2;
-    float mileage = 3;
-  }
-  oneof fb {
-    WheelState wheelState = 1;
+message EngCtl {
+  Side side = 1;
+  oneof method {
+    float pwm = 2;
+    float speed = 3;
   }
 }
 
-message ConfigPID {
+message PIDConfig {
   float p = 1;
   float i = 2;
   float d = 3;
-  float minOut = 4;
-  float maxOut = 5;
 }
 
-message Config {
-  float ticksPerSec = 1;
-  ConfigPID pid = 2;
+message WheelState {
+  Side side = 1;
+  float pwm = 2;
+  float speed = 3;
+  float mileage = 4;
+  float targetSpeed = 5;
+}
+
+message PIDReset {}
+
+message KitekMsg {
+  oneof msg {
+    EngCtl engCtl = 1;
+    PIDReset resetPID = 2;
+    PIDConfig cfgPID = 3;
+    WheelState wheelState = 4;
+  }
 }
 
 // EmitUDP.cpp

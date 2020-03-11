@@ -19,95 +19,97 @@ Joy::Joy(fs::path devPath)
     }
 
     bool isJoy = libevdev_has_event_type(dev, EV_ABS) && libevdev_has_event_type(dev, EV_KEY);
-    if(!isJoy) {
+    if (!isJoy) {
         close(fd);
         throw std::runtime_error(fmt::format("Joy/device is not a joystick: {}", devPath.generic_string()));
     }
 
     for (int code = 0; code < KEY_CNT; ++code) {
         if (libevdev_has_event_code(dev, EV_KEY, code)) {
-            state.buttons[code] = false;
+            state.button[code] = false;
+            state.buttonChanged[code] = false;
         }
     }
 
     for(int code = 0; code < ABS_CNT; ++code) {
         if (libevdev_has_event_code(dev, EV_ABS, code)) {
             auto* info = libevdev_get_abs_info(dev, code);
-            // fmt::print("code={} min={} max={} res={} val={} flat={} fuzz={}\n", axisName(code), info->minimum, info->maximum, info->resolution, info->value, info->flat, info->fuzz);
             axisInfo[code] = info;
-            int value = info->value;
-            if (value > info->maximum) {
-                // fmt::print("{} overflow = {} / {}!\n", axisName(code), value, info->maximum);
-                value = info->maximum;
-            }
-            if (value < info->minimum) {
-                // fmt::print("{} underflow = {} / {}!\n", axisName(code), value, info->minimum);
-                value = info->minimum;
-            }
+            // TODO: This was once computed, but now is not used, why? (BUG?)
+            // int value = std::clamp(info->value, info->minimum, info->maximum);
             axisZero[code] = info->value;
-            state.axes[code] = axisValueToFloat(code, info->value); // best guess, may be not between <min, max> though
-            // fmt::print("{} = {} [{}] ({} {})\n", axisName(code), state.axes[code], info->value, info->minimum, info->maximum);
+            state.axis[code] = axisValueToFloat(code, info->value); // best guess, may be not between <min, max> though
+            state.axisChanged[code] = false;
         }
     }
 
 }
 
-const char *Joy::btnName(int btn)
+const char *Joy::getButtonName(int btn) const
 {
     const char* name = libevdev_event_code_get_name(EV_KEY, btn);
     return (name == nullptr ? "(null button)" : name);
 }
 
-const char *Joy::axisName(int axis)
+const char *Joy::getAxisName(int axis) const
 {
     const char* name = libevdev_event_code_get_name(EV_ABS, axis);
     return (name == nullptr ? "(null axis)" : name);
 }
 
-const JoyState &Joy::update()
+// assumption: kernel will not send any double event (e.g. the same axis value)
+void Joy::tick()
 {
     int status = 0;
 
     // reset sticky buttons
-    while (!stickyButtons.empty()) {
-        int code = stickyButtons.front();
-        state.buttons[code] = false;
-        stickyButtons.pop();
+    for (auto& code : stickyButtons) {
+        state.button[code] = false;
+    }
+    stickyButtons.clear();
+    
+    for (auto& btnChg : state.buttonChanged) {
+        btnChg.second = false;
+    }
+
+    for (auto& axisChg : state.axisChanged) {
+        axisChg.second = false;
     }
 
     struct input_event ev;
     std::set<int> buttonsPressed;
-    while (true) {
-        status = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
-        // handle return condition
-        if (status == -EAGAIN) {
-            break;
-        }
+    while (-EAGAIN != (status = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev))) {
         if (status < 0) {
             throw std::runtime_error(fmt::format("Joy/libevdev_next_event: {}", status));
-
         }
 
         // handle events
         if (ev.type == EV_ABS) {
-            state.axes[ev.code] = axisValueToFloat(ev.code, ev.value);
+            state.axisChanged[ev.code] = true;
+            state.axis[ev.code] = axisValueToFloat(ev.code, ev.value);
         }
         if (ev.type == EV_KEY) {
+            // TODO: try to simplify this if-tree
+            state.buttonChanged[ev.code] = true;
             if (ev.value == 1) {
                 buttonsPressed.insert(ev.code);
-                state.buttons[ev.code] = ev.value;
+                state.button[ev.code] = ev.value;
             }
             else {
                 bool seenPress = (buttonsPressed.find(ev.code) != buttonsPressed.end());
                 if (seenPress) {
-                    stickyButtons.push(ev.code);
+                    stickyButtons.insert(ev.code);
                 }
                 else {
-                    state.buttons[ev.code] = ev.value;
+                    state.button[ev.code] = ev.value;
                 }
             }
         }
     }
+}
+
+const JoyState& Joy::getState() const
+{
     return state;
 }
 

@@ -28,13 +28,17 @@ LED::~LED()
 	setPWM(0.0f);
 }
 
-LED_RGB::LED_RGB(int pinR, int pinG, int pinB) : ledR(pinR), ledG(pinG), ledB(pinB) { };
+LED_RGB::LED_RGB(LED* ledR, LED* ledG, LED* ledB) : 
+	ledR(ledR), 
+	ledG(ledG), 
+	ledB(ledB) 
+{ }
 
 void LED_RGB::setRGB(float r, float g, float b)
 {
-	ledR.setPWM(r);
-	ledG.setPWM(g);
-	ledB.setPWM(b);
+	ledR->setPWM(r);
+	ledG->setPWM(g);
+	ledB->setPWM(b);
 }
 
 void LED_RGB::setHSV(float h, float s, float v)

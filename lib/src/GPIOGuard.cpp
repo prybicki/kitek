@@ -1,9 +1,9 @@
-#include "GPIOHandle.hpp"
+#include "GPIOGuard.hpp"
 #include <pigpio.h>
 #include <signal.h>
 #include <stdexcept>
 
-static GPIOHandle* instance = nullptr;
+static GPIOGuard* instance = nullptr;
 
 static volatile bool signalOccured = false;
 static void signalHandler(int num)
@@ -11,7 +11,7 @@ static void signalHandler(int num)
 	signalOccured = true;
 }
 
-GPIOHandle::GPIOHandle(bool debug)
+GPIOGuard::GPIOGuard(bool debug)
 {
     if (instance != nullptr) {
         throw std::runtime_error("double init detected");
@@ -33,7 +33,7 @@ GPIOHandle::GPIOHandle(bool debug)
 	instance = this;
 }
 
-bool GPIOHandle::mustQuit()
+bool GPIOGuard::mustQuit()
 {
 	if (signalOccured) {
 		signalOccured = false;
@@ -42,7 +42,7 @@ bool GPIOHandle::mustQuit()
 	return false;
 }
 
-GPIOHandle::~GPIOHandle() 
+GPIOGuard::~GPIOGuard() 
 {
 	gpioTerminate();
     instance = nullptr;
