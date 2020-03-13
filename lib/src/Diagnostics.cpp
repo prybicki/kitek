@@ -1,53 +1,56 @@
 
+#include <Diagnostics.hpp>
 #include <fmt/format.h>
 #include <pigpio.h>
 #include <L298N.hpp>
 #include <KitekHW.hpp>
 #include <Encoder.hpp>
 #include <string>
-#include <Diagnostics.hpp>
+#include <chrono>
+#include <numeric>
+#include <ClockAmplifier.hpp>
 
 void Diagnostics::testEngines(KitekHW& hw)
 {
 	const int ENGINE_TEST_SEC = 2;
 	const float ENGINE_TEST_PWM = 0.5f;
 
-    fmt::print("Left forward\n");
-    hw.engL->setPWM(ENGINE_TEST_PWM);
-    gpioSleep(PI_TIME_RELATIVE, ENGINE_TEST_SEC, 0);
+	fmt::print("Left forward\n");
+	hw.engL->setPWM(ENGINE_TEST_PWM);
+	gpioSleep(PI_TIME_RELATIVE, ENGINE_TEST_SEC, 0);
 
-    fmt::print("Left backward\n");
-    hw.engL->setPWM(-ENGINE_TEST_PWM);
-    gpioSleep(PI_TIME_RELATIVE, ENGINE_TEST_SEC, 0);
+	fmt::print("Left backward\n");
+	hw.engL->setPWM(-ENGINE_TEST_PWM);
+	gpioSleep(PI_TIME_RELATIVE, ENGINE_TEST_SEC, 0);
 
-    hw.engL->setPWM(0.0);
+	hw.engL->setPWM(0.0);
 
-    fmt::print("Right forward\n");
-    hw.engR->setPWM(ENGINE_TEST_PWM);
-    gpioSleep(PI_TIME_RELATIVE, ENGINE_TEST_SEC, 0);
+	fmt::print("Right forward\n");
+	hw.engR->setPWM(ENGINE_TEST_PWM);
+	gpioSleep(PI_TIME_RELATIVE, ENGINE_TEST_SEC, 0);
 
-    fmt::print("Right backward\n");
-    hw.engR->setPWM(-ENGINE_TEST_PWM);
-    gpioSleep(PI_TIME_RELATIVE, ENGINE_TEST_SEC, 0);
+	fmt::print("Right backward\n");
+	hw.engR->setPWM(-ENGINE_TEST_PWM);
+	gpioSleep(PI_TIME_RELATIVE, ENGINE_TEST_SEC, 0);
 
-    hw.engR->setPWM(0);
+	hw.engR->setPWM(0);
 }
 
 void Diagnostics::printEncoders(KitekHW& hw)
 {
-    EncoderTicks ticksL = hw.encL->getTicks();
-    EncoderTicks ticksR = hw.encR->getTicks();
-    fmt::print("Encoder L: f{} b{} e{}\n", ticksL.forward, ticksL.backward, ticksL.empty);
-    fmt::print("Encoder R: f{} b{} e{}\n", ticksR.forward, ticksR.backward, ticksR.empty);
+	EncoderTicks ticksL = hw.encL->getTicks();
+	EncoderTicks ticksR = hw.encR->getTicks();
+	fmt::print("Encoder L: f{} b{} e{}\n", ticksL.forward, ticksL.backward, ticksL.empty);
+	fmt::print("Encoder R: f{} b{} e{}\n", ticksR.forward, ticksR.backward, ticksR.empty);
 }
 
 void Diagnostics::testEncoders(KitekHW& hw)
 {
-    GPIOGuard gpio;
-    while(!gpio.mustQuit()) {
-        printEncoders(hw);
-        gpioSleep(PI_TIME_RELATIVE, 0, 100 * 1000);
-    }
+	GPIOGuard gpio;
+	while(!gpio.mustQuit()) {
+		printEncoders(hw);
+		gpioSleep(PI_TIME_RELATIVE, 0, 100 * 1000);
+	}
 }
 
 void Diagnostics::runTests(int argc, char** argv, KitekHW& hw)
@@ -60,8 +63,56 @@ void Diagnostics::runTests(int argc, char** argv, KitekHW& hw)
 		if (std::string(argv[i]) == "enc") {
 			testEncoders(hw);
 		}
-		
+
+		// RPI0:
+		// chrono: 1009.134739 ns
+		// gpioTick: 110.756 ns
+		// ClockAmplifier/gpioTick: 127.111 ns
+		if(std::string(argv[i]) == "latency") {
+			const int TRIALS = 1000000;
+			fmt::print("chrono: {} ns\n", testChronoLatencyNs(TRIALS));
+			fmt::print("gpioTick: {} ns\n", testGpioTickLatencyNs(TRIALS));
+			fmt::print("ClockAmplifier/gpioTick: {} ns\n", testClockAmplifierGpioTickLatencyNs(TRIALS));
+		}
 	}
+}
+
+double Diagnostics::testChronoLatencyNs(size_t trials)
+{
+	std::vector<double> intervals(trials);
+	auto then = std::chrono::high_resolution_clock::now();
+	for (auto& interval : intervals) {
+		auto now = std::chrono::high_resolution_clock::now();
+		interval = std::chrono::duration_cast<std::chrono::nanoseconds>(now - then).count();
+		then = now;
+	}
+	return std::accumulate(intervals.begin(), intervals.end(), 0.0) / intervals.size();
+}
+
+double Diagnostics::testGpioTickLatencyNs(size_t trials)
+{
+	gpioInitialise();
+	std::vector<double> intervals(trials);
+	auto then = static_cast<int>(gpioTick());
+	for (auto& interval : intervals) {
+		auto now = static_cast<int>(gpioTick());
+		interval = (now - then) * 1000;
+		then = now;
+	}
+	return std::accumulate(intervals.begin(), intervals.end(), 0.0) / intervals.size();
+}
+
+double Diagnostics::testClockAmplifierGpioTickLatencyNs(size_t trials)
+{
+	ClockAmplifier<gpioTick, uint64_t> clock;
+	std::vector<double> intervals(trials);
+	auto then = static_cast<int>(clock.getTick());
+	for (auto& interval : intervals) {
+		auto now = static_cast<int>(clock.getTick());
+		interval = (now - then) * 1000;
+		then = now;
+	}
+	return std::accumulate(intervals.begin(), intervals.end(), 0.0) / intervals.size();
 }
 
 // void testHardware(Kitek& hw)
@@ -114,37 +165,7 @@ void Diagnostics::runTests(int argc, char** argv, KitekHW& hw)
 //     }
 // }
 
-// #include <chrono>
-// void testLatency()
-// {
-// 	// chrono: 851.759 ns
-// 	// gpioTick: 133.43 ns
-// 	const int TRIALS = 100000;
-// 	{
-// 		std::vector<double> intervals(TRIALS);
-// 		auto then = std::chrono::high_resolution_clock::now();
-// 		for (auto& interval : intervals) {
-// 			auto now = std::chrono::high_resolution_clock::now();
-// 			interval = std::chrono::duration_cast<std::chrono::nanoseconds>(now - then).count();
-// 			then = now;
-// 		}
-// 		double avgInterval = std::accumulate(intervals.begin(), intervals.end(), 0.0) / intervals.size();
-// 		fmt::print("chrono: {} ns\n", avgInterval);
-// 	}
 
-// 	gpioInitialise();
-// 	{
-// 		std::vector<double> intervals(TRIALS);
-// 		auto then = static_cast<int>(gpioTick());
-// 		for (auto& interval : intervals) {
-// 			auto now = static_cast<int>(gpioTick());
-// 			interval = (now - then) * 1000;
-// 			then = now;
-// 		}
-// 		double avgInterval = std::accumulate(intervals.begin(), intervals.end(), 0.0) / intervals.size();
-// 		fmt::print("gpioTick: {} ns\n", avgInterval);
-// 	}
-// }
 
 // void tunePID(Kitek& hw)
 // {

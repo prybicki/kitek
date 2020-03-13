@@ -15,32 +15,32 @@ include_directories(${pigpio_INCLUDE_DIR})
 # --- Handles --- #
 
 add_library(GPIOGuard lib/src/GPIOGuard.cpp)
-target_link_libraries(GPIOGuard pigpio)
+target_link_libraries(GPIOGuard ${pigpio_LIBRARY})
 
 add_library(I2CHandle lib/src/I2CHandle.cpp)
-target_link_libraries(I2CHandle pigpio fmt)
+target_link_libraries(I2CHandle ${pigpio_LIBRARY} fmt)
 
 # --- Hardware --- #
 
 add_library(L298N lib/src/L298N.cpp)
-target_link_libraries(L298N pigpio m)
+target_link_libraries(L298N ${pigpio_LIBRARY} m)
 
 add_library(LED lib/src/LED.cpp)
-target_link_libraries(GPIOGuard pigpio)
+target_link_libraries(GPIOGuard ${pigpio_LIBRARY})
 
 add_library(Servo lib/src/Servo.cpp)
-target_link_libraries(Servo pigpio m)
+target_link_libraries(Servo ${pigpio_LIBRARY} m)
 
 add_library(PCF8591 lib/src/PCF8591.cpp)
 target_link_libraries(PCF8591 I2CHandle fmt)
 
 add_library(Encoder lib/src/Encoder.cpp)
-target_link_libraries(Encoder pigpio)
+target_link_libraries(Encoder ${pigpio_LIBRARY})
 
 # --- Systems --- #
 
 add_library(PID lib/src/PID.cpp)
-target_link_libraries(PID pigpio)
+target_link_libraries(PID ${pigpio_LIBRARY})
 
 add_library(Wheel lib/src/Wheel.cpp)
 target_link_libraries(Wheel L298N Encoder stdc++)
@@ -64,12 +64,12 @@ target_include_directories(Joy INTERFACE ${LIBEVDEV_INCLUDE_DIR})
 target_link_libraries(Joy fmt ${LIBEVDEV_LIBRARY} stdc++fs)
 
 add_library(TickManager lib/src/TickManager.cpp)
-target_link_libraries(TickManager pigpio)
+target_link_libraries(TickManager ${pigpio_LIBRARY})
 
 # --- Apps --- #
 
-# add_executable(emitUDP apps/emitUDP.cpp)
-# target_link_libraries(emitUDP Protocol UDPTransceiver)
+add_executable(emitUDP apps/cpp/emitUDP.cpp)
+target_link_libraries(emitUDP Protocol UDPTransceiver)
 
 add_executable(kitek apps/cpp/kitek.cpp)
 target_link_libraries(kitek pthread Diagnostics Protocol UDPTransceiver TickManager yaml-cpp)

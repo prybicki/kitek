@@ -12,7 +12,8 @@ Functional targets:
 Technical targets:
 - Does this Tickable thing makes any sense?
 - PID can be templatized with min/max -> float can't be simply template parameter
-- NVController should take Joy as parameter
+- NVController should take Joy as parameter - but what about cases when no joy is used?
+- Link pigpio statically and do LTO
 
 Optional:
 
