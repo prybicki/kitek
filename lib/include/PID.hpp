@@ -9,9 +9,15 @@ struct PID
 	float kd;
 	float min;
 	float max;
-	float prevErr = 0.0f;
+	float prevError = 0.0f;
 	float integral = 0.0f;
-	uint32_t lastUpdate = 0.0f;
+	uint32_t lastUpdateTick = 0;
+
+	float error;
+	float pOut;
+	float iOut;
+	float dOut;
+	float outRaw;
 
 	PID(float p, float i, float d, float min, float max);
 	float compute(float target, float current);

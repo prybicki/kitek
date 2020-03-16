@@ -6,7 +6,6 @@ enum Side {
   SIDE_COUNT = 2;
 }
 
-
 message EngCtl {
   Side side = 1;
   oneof method {
@@ -21,15 +20,25 @@ message PIDConfig {
   float d = 3;
 }
 
+message PIDReset {}
+
 message WheelState {
-  Side side = 1;
-  float pwm = 2;
-  float speed = 3;
-  float mileage = 4;
-  float targetSpeed = 5;
+  uint64 timestamp = 1;
+  Side side = 2;
+  float pwm = 3;
+  float speed = 4;
+  float mileage = 5;
+  float targetSpeed = 6;
 }
 
-message PIDReset {}
+message PIDState {
+  uint64 timestamp = 1;
+  float error = 2;
+  float integral = 3;
+  float pOut = 4;
+  float iOut = 5;
+  float dOut = 6; 
+}
 
 message KitekMsg {
   oneof msg {
@@ -37,6 +46,7 @@ message KitekMsg {
     PIDReset resetPID = 2;
     PIDConfig cfgPID = 3;
     WheelState wheelState = 4;
+    PIDState pidState = 5;
   }
 }
 

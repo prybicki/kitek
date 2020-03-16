@@ -214,3 +214,18 @@ double Diagnostics::testClockAmplifierGpioTickLatencyNs(size_t trials)
 //     }
 // }
 
+
+// uint8_t getTick() {
+// 	static uint8_t tick = 0;
+// 	return tick++;
+// }
+
+// #include <ClockAmplifier.hpp>
+// #include <fmt/format.h>
+// void testClockAmplifier()
+// {
+// 	ClockAmplifier<getTick, uint64_t> clock;
+// 	while(true) {
+// 		fmt::print("{} {} {}\n", clock.lastTick, clock.epoch, clock.getTick());
+// 	}
+// }

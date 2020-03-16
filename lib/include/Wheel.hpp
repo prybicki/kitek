@@ -16,7 +16,8 @@ struct Wheel : Tickable
 	float getPWM();
 	void setSpeed(float speed);
 	void setPWM(float pwm);
-	std::optional<float> getTargetSpeed(); 
+	std::optional<float> getTargetSpeed();
+	uint32_t getLastUpdateTick();
 
 private:
 	EncoderTicks currState;

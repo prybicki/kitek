@@ -79,8 +79,6 @@ struct NVController : Tickable {
 			pidValue.at(pidValueIdx) += hatYValue;
 			pidCfgDirty = true;
 		}
-
-		fmt::print("{} {}\n", drive.at(LEFT), drive.at(RIGHT));
 	}
 
 	std::vector<KitekMsg> getMessages()
@@ -157,6 +155,9 @@ int main(int argc, char** argv)
 		while ((msgBytes = udp.getNextMsg()).has_value()) {
 			msg.ParseFromArray(msgBytes->getPtr(), msgBytes->getSize());
 			if (msg.msg_case() == KitekMsg::MsgCase::kWheelState) {
+				gui.sendMsg(*msgBytes);
+			}
+			if (msg.msg_case() == KitekMsg::MsgCase::kPidState) {
 				gui.sendMsg(*msgBytes);
 			}
 		}

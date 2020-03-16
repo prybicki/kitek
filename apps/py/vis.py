@@ -77,24 +77,28 @@ class Base:
         pen_rt = pg.mkPen(color='r', width=1)
 
         self.plot_pwm = self.win.addPlot(title="Engine PWM")
+        self.win.nextRow()
         self.plot_pwm.setYRange(0, 1)
-        self.plot_pwm_curve = [
+        self.plot_pwm_curve = [ 
             self.plot_pwm.plot(pen=pen_lt),
             self.plot_pwm.plot(pen=pen_rt)
         ]
 
         self.plot_speed = self.win.addPlot(title='Wheel speed')
+        self.win.nextRow()
         # TODO: this is hardcoded, but max over time is needed in fact
         self.plot_speed.setYRange(-0.5, 0.5)
         self.plot_speed_curve = [
             self.plot_speed.plot(pen=pen_lt),
             self.plot_speed.plot(pen=pen_rt)
         ]
-        
         self.plot_speed_target = [
             self.plot_speed.addLine(y=0, pen=pen_lt),
             self.plot_speed.addLine(y=0, pen=pen_rt),
         ]
+
+        self.plot_pid = self.win.addPlot(title='PID', colspan=1)
+        self.win.nextRow()
 
         self.udp = UDPTransceiver(4096)
         self.tasks.add(self.process_input)

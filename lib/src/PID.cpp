@@ -1,8 +1,8 @@
 #include <PID.hpp>
-
+#include <algorithm>
 #include <pigpio.h>
 
-PID::PID(float p, float i, float d, float min, float max) : min(min), max(max), lastUpdate(gpioTick())
+PID::PID(float p, float i, float d, float min, float max) : min(min), max(max), lastUpdateTick(gpioTick())
 {
     config(p, i, d);
 }
@@ -10,18 +10,17 @@ PID::PID(float p, float i, float d, float min, float max) : min(min), max(max), 
 float PID::compute(float target, float current) 
 {
     uint32_t now = gpioTick();
-    float dt = 1e-6 * (static_cast<float>(now) - lastUpdate);
-    lastUpdate = now;
-    float err = target - current;
-    float p = kp * err;
-    float i = ki * (integral += err * dt + ((err - prevErr) * dt / 2.0f));
-    float d = dt == 0.0f ? 0.0f : kd * ((err - prevErr) / dt);
-    float out = p + i + d;
-    out = out > max ? max : out;
-    out = out < min ? min : out;
+    float dt = 1e-6 * (static_cast<float>(now) - lastUpdateTick);
+    
+    error = target - current;
+    pOut = kp * error;
+    iOut = ki * (integral += error * dt + ((error - prevError) * dt / 2.0f));
+    dOut = dt == 0.0f ? 0.0f : kd * ((error - prevError) / dt);
+    outRaw = pOut + iOut + dOut;
 
-    prevErr = err;
-    return out;
+    prevError = error;
+    lastUpdateTick = now;
+    return std::clamp(outRaw, min, max);
 }
 
 void PID::config(float p, float i, float d) 

@@ -36,7 +36,6 @@ float Wheel::ticksToDist(int ticks) {
     return wheelDiameter * M_PI * static_cast<float>(ticks) / ticksPerRev;
 }
 
-#include <fmt/format.h>
 void Wheel::setSpeed(float speed)
 {
     if (fabs(speed) < 0.01f) {
@@ -61,4 +60,9 @@ float Wheel::getPWM()
 std::optional<float> Wheel::getTargetSpeed()
 {
     return targetSpeedSI;
+}
+
+uint32_t Wheel::getLastUpdateTick()
+{
+    return currState.timestap;
 }

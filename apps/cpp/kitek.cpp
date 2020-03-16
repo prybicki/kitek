@@ -57,8 +57,11 @@ int main(int argc, char** argv)
 	GPIOGuard gpio {
 		cfg["gpioDebug"].as<bool>()
 	};
+
+	GPIOClock clock;
 	
 	TickManagerGPIO tick {
+		&clock,
 		cfg["loopHz"].as<float>()
 	};
 
@@ -74,7 +77,7 @@ int main(int argc, char** argv)
 	UDPTransceiver udp{1024};
 	std::string protocolBuffer;
 	std::optional<MemSlice> msgBytes;
-	tick.sleepUntilNextTick();
+	tick.sleepUntilNextTick();	
 	while (!gpio.mustQuit()) {
 
 		for (auto& tickable : hw.tickables) {
@@ -91,8 +94,9 @@ int main(int argc, char** argv)
 		}
 		hw.ledB->set(false);
 
-		for (auto& side : sides) {
+		for (auto&& side : sides) {
 			WheelState* wheelState = msg.mutable_wheelstate();
+			wheelState->set_timestamp(clock.liftTick(hw.wheel.at(side)->getLastUpdateTick()));
 			wheelState->set_side(side);
 			wheelState->set_pwm(hw.wheel.at(side)->getPWM());
 			wheelState->set_speed(hw.wheel.at(side)->getSpeed());
@@ -103,6 +107,16 @@ int main(int argc, char** argv)
 			}
 			msg.SerializeToString(&protocolBuffer);
 			udp.sendMsg(protocolBuffer);
+		}
+
+		for (auto&& side : sides) {
+			PIDState* pidState = msg.mutable_pidstate();
+			pidState->set_timestamp(clock.liftTick(hw.pid.at(side)->lastUpdateTick));
+			pidState->set_integral(hw.pid.at(side)->integral);
+			pidState->set_error(hw.pid.at(side)->error);
+			pidState->set_pout(hw.pid.at(side)->pOut);
+			pidState->set_dout(hw.pid.at(side)->dOut);
+			pidState->set_iout(hw.pid.at(side)->iOut);
 		}
 
 		hw.ledG->set(true);

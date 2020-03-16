@@ -1,15 +1,18 @@
 #pragma once
 
 #include <cstdint>
+#include <ClockAmplifier.hpp>
+#include <pigpio.h>
 
 struct TickManagerGPIO
 {
-	TickManagerGPIO(float hz);
+	TickManagerGPIO(GPIOClock* clock, float hz);
 	void sleepUntilNextTick();
 
 private:
+	GPIOClock* clock;
 	int32_t periodMs;
-	uint32_t tickBeginMs;
+	uint64_t tickBeginMs;
 };
 
 #include <chrono>

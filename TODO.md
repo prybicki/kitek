@@ -1,4 +1,5 @@
 Functional targets:
+>>>- See TODO in Clock AMPLIFIER
 
 - PID has no still error
     - Chart of p, i, d?
@@ -14,6 +15,8 @@ Technical targets:
 - PID can be templatized with min/max -> float can't be simply template parameter
 - NVController should take Joy as parameter - but what about cases when no joy is used?
 - Link pigpio statically and do LTO
+- 
+- Use impl Clock(Amplifier) everywhere, avoid direct calls to gpioTick
 
 Optional:
 
