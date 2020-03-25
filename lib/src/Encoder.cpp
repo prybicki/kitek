@@ -43,7 +43,7 @@ void Encoder::callback(int pin, int level, uint32_t tick)
 		ticks.backward += 1;
 	else
 		ticks.empty += 1;
-	ticks.timestap = gpioTick();
+	ticks.timestamp = gpioTick();
 }
 
 Encoder::Encoder(int pinA, int pinB)
@@ -70,6 +70,6 @@ EncoderTicks EncoderTicks::operator-(const EncoderTicks& other) const
 	out.forward -= other.forward;
 	out.backward -= other.backward;
 	out.empty -= other.empty;
-	out.timestap -= other.timestap;
+	out.timestamp -= other.timestamp;
 	return out;
 }

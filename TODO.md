@@ -1,3 +1,7 @@
+Tomorrow:
+    Move everything timestampable (PID/encoders/etc) under the umbrella of Wheel to make sure there's single source of truth of timestamps
+
+
 Release target:
 - PID has no still error
     - Chart of p, i, d, integral [in progress]
@@ -11,6 +15,7 @@ Release target:
 - Save overall mileage
     - Show it in GUI
 
+- Total uptime in statistics
 - Timeouts (speed!)
 
 Pool:

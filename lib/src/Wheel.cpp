@@ -28,7 +28,7 @@ float Wheel::getSpeed() // speed
 {
     float fwd = ticksToDist(diff.forward);
     float bwd = ticksToDist(diff.backward);
-    double elapsedSecs = 1e-6 * diff.timestap;
+    double elapsedSecs = 1e-6 * diff.timestamp;
     return elapsedSecs > 0 ? (fwd - bwd) / elapsedSecs : 0.0f;
 }
 
@@ -64,5 +64,5 @@ std::optional<float> Wheel::getTargetSpeed()
 
 uint32_t Wheel::getLastUpdateTick()
 {
-    return currState.timestap;
+    return currState.timestamp;
 }

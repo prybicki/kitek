@@ -34,7 +34,6 @@ I getSign(F v) {
 	return 0;
 }
 
-
 template<typename T, T count>
 using CyclicIndex = BoundedInteger<T, static_cast<T>(0), count-1>;
 
@@ -143,13 +142,19 @@ int main(int argc, char** argv)
 	NVController ctl;
 	UDPTransceiver udp {2048};
 	UDPTransceiver gui {2049};
-	udp.setTarget("192.168.0.172", 1024);
+	udp.setTarget("192.168.0.171", 1024);
 	gui.setTarget("127.0.0.1", 4096);
 	fmt::print("NVIDIA Controller {}\n", ctl.isConnected() ? "connected" : "disconnected");
 
 	KitekMsg msg;
 	std::optional<MemSlice> msgBytes;
 	std::string protocolBuffer;
+
+	// Send initial message to let the driver know base address.
+	msg.mutable_resetpid();
+	msg.SerializeToString(&protocolBuffer);
+	udp.sendMsg(protocolBuffer);
+
 	tick.sleepUntilNextTick();
 	while(true) {
 		while ((msgBytes = udp.getNextMsg()).has_value()) {
@@ -166,7 +171,6 @@ int main(int argc, char** argv)
 
 		for (auto& msg : ctl.getMessages()) {
 			msg.SerializeToString(&protocolBuffer);
-			udp.sendMsg(protocolBuffer);
 		}
 
 		tick.sleepUntilNextTick();

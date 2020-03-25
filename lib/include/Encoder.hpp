@@ -1,13 +1,14 @@
 #pragma once
 
 #include <mutex>
+#include <pigpio.h>
 
 struct EncoderTicks {
-    EncoderTicks() : forward(0), backward(0), empty(0) {}
+    EncoderTicks() : forward(0), backward(0), empty(0), timestamp(gpioTick()) {}
 	int forward;
 	int backward;
 	int empty;
-	uint32_t timestap;
+	uint32_t timestamp;
 
 	EncoderTicks operator-(const EncoderTicks& other) const;
 };
