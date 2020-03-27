@@ -14,7 +14,8 @@ float PID::compute(float target, float current)
     
     error = target - current;
     pOut = kp * error;
-    iOut = ki * (integral += error * dt + ((error - prevError) * dt / 2.0f));
+    // iOut = ki * (integral += error * dt + ((error - prevError) * dt / 2.0f));
+    iOut = ki * (integral += (error + prevError) * dt / 2.0f);
     dOut = dt == 0.0f ? 0.0f : kd * ((error - prevError) / dt);
     outRaw = pOut + iOut + dOut;
 

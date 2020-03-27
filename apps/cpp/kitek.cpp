@@ -97,7 +97,6 @@ int main(int argc, char** argv)
 		for (auto&& side : sides) {
 			WheelState* wheelState = msg.mutable_wheelstate();
 			wheelState->set_timestamp(clock.liftTick(hw.wheel.at(side)->getLastUpdateTick()));
-			fmt::print("wheel state: {}\n", hw.wheel.at(side)->getLastUpdateTick());
 			wheelState->set_side(side);
 			wheelState->set_pwm(hw.wheel.at(side)->getPWM());
 			wheelState->set_speed(hw.wheel.at(side)->getSpeed());
@@ -114,6 +113,7 @@ int main(int argc, char** argv)
 			auto&& targetSpeed = hw.wheel.at(side)->getTargetSpeed();
 			if (targetSpeed.has_value()) {
 				PIDState* pidState = msg.mutable_pidstate();
+				pidState->set_side(side);
 				pidState->set_timestamp(clock.liftTick(hw.pid.at(side)->lastUpdateTick));
 				pidState->set_integral(hw.pid.at(side)->integral);
 				pidState->set_error(hw.pid.at(side)->error);

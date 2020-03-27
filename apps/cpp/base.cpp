@@ -171,6 +171,7 @@ int main(int argc, char** argv)
 
 		for (auto& msg : ctl.getMessages()) {
 			msg.SerializeToString(&protocolBuffer);
+			udp.sendMsg(protocolBuffer);
 		}
 
 		tick.sleepUntilNextTick();

@@ -64,5 +64,5 @@ std::optional<float> Wheel::getTargetSpeed()
 
 uint32_t Wheel::getLastUpdateTick()
 {
-    return currState.timestamp;
+    return getSpeed() == 0 ? gpioTick() : currState.timestamp;
 }

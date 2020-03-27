@@ -12,10 +12,9 @@ from Protocol_pb2 import *
 
 SIDES = [Side.LEFT, Side.RIGHT]
 
-LOOP_HZ = 30
-HISTORY_LENGTH = 128  # TODO time instead of ticks
+LOOP_HZ = 10
 LOOP_PERIOD_MS = 1000.0 / LOOP_HZ
-TIME_WINDOW_SECS = 8
+TIME_WINDOW_SECS = 20
 
 
 class UDPTransceiver:
@@ -64,10 +63,10 @@ class Tasks:
 
 
 class TimeSeriesPlot(pg.PlotItem):
-    def __init__(self, keys, time_window, *args, **kwargs):
+    def __init__(self, keys, pens, time_window, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # self.addLegend()
-        self.curve = {key: super(TimeSeriesPlot, self).plot() for key in keys}
+        self.curve = {key: super(TimeSeriesPlot, self).plot(pen=pens[key]) for key in keys}
         self.x = {key: deque() for key in keys}
         self.y = {key: deque() for key in keys}
         self.time_window = time_window
@@ -76,11 +75,9 @@ class TimeSeriesPlot(pg.PlotItem):
         timestamp /= 1e6
         self.x[key].append(timestamp)  # Convert usec -> sec
         self.y[key].append(value)
-        print('{} - {} = {} ~ {}'.format(timestamp, self.x[key][0], timestamp - self.x[key][0], self.time_window))
         while len(self.x[key]) > 0 and timestamp - self.x[key][0] > self.time_window:
             self.x[key].popleft()
             self.y[key].popleft()
-        # print('{}: ({}, {})'.format(key, self.x[key][0]))
         self.curve[key].setData(self.x[key], self.y[key])
 
 
@@ -90,18 +87,31 @@ class Base:
         self.win.resize(1600, 900)
         self.tasks = Tasks(LOOP_PERIOD_MS)
 
-        self.pwm_plot = TimeSeriesPlot(keys=SIDES, time_window=TIME_WINDOW_SECS, title='Engine PWM')
-        self.pwm_plot.setYRange(0, 1)
+        side_pens = {
+            Side.LEFT: pg.mkPen(color='b'),
+            Side.RIGHT: pg.mkPen(color='r'),
+        }
+
+        self.pwm_plot = TimeSeriesPlot(keys=SIDES, pens=side_pens, time_window=TIME_WINDOW_SECS, title='Engine PWM')
+        self.pwm_plot.setYRange(-1, 1)
         self.win.addItem(self.pwm_plot)
         self.win.nextRow()
 
-        self.speed_plot = TimeSeriesPlot(keys=SIDES, time_window=TIME_WINDOW_SECS, title='Wheel Speed')
+        self.speed_plot = TimeSeriesPlot(keys=SIDES, pens=side_pens, time_window=TIME_WINDOW_SECS, title='Wheel Speed')
+        self.speed_plot.setYRange(-0.5, 0.5)
         self.speed_line = {side: self.speed_plot.addLine() for side in SIDES}
         self.win.addItem(self.speed_plot)
         self.win.nextRow()
 
         pid_keys = ['pOut', 'iOut', 'dOut', 'error', 'integral']
-        self.pid_plot = TimeSeriesPlot(keys=pid_keys, time_window=TIME_WINDOW_SECS, title='PID')
+        pid_pens = {
+            'pOut': pg.mkPen(color='r'),
+            'iOut': pg.mkPen(color='g'),
+            'dOut': pg.mkPen(color='b'),
+            'error': pg.mkPen(color='y'),
+            'integral': pg.mkPen(color='m'),
+        }
+        self.pid_plot = TimeSeriesPlot(keys=pid_keys, pens=pid_pens, time_window=TIME_WINDOW_SECS, title='PID')
         self.win.addItem(self.pid_plot)
         self.win.nextRow()
 
@@ -117,13 +127,13 @@ class Base:
                 self.pwm_plot.append(w.side, w.timestamp, w.pwm)
                 self.speed_plot.append(w.side, w.timestamp, w.speed)
                 self.speed_line[w.side].setValue(w.targetSpeed)
-            # if msg.pidState is not None:
-            #     p = msg.pidState
-            #     self.pid_plot.append('pOut', p.timestamp, p.pOut)
-            #     self.pid_plot.append('iOut', p.timestamp, p.iOut)
-            #     self.pid_plot.append('dOut', p.timestamp, p.dOut)
-            #     self.pid_plot.append('error', p.timestamp, p.error)
-            #     self.pid_plot.append('integral', p.timestamp, p.integral)
+            if msg.HasField('pidState') and msg.pidState.side == Side.LEFT:
+                p = msg.pidState
+                # self.pid_plot.append('pOut', p.timestamp, p.pOut)
+                # self.pid_plot.append('iOut', p.timestamp, p.iOut)
+                # self.pid_plot.append('dOut', p.timestamp, p.dOut)
+                # self.pid_plot.append('error', p.timestamp, p.error)
+                self.pid_plot.append('integral', p.timestamp, p.integral)
             
             # ADD horizontal line
             # self.speed_target[msg.wheelState.side].setValue(msg.wheelState.targetSpeed)

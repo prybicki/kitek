@@ -1,6 +1,6 @@
-Tomorrow:
-    Move everything timestampable (PID/encoders/etc) under the umbrella of Wheel to make sure there's single source of truth of timestamps
-
+For now, PID is reasonably good within 0.3 m/s speed limit.
+In future try to understand the way the integral behaves.
+Additionally, figure out a way to treat both wheels as single system, not separate control loops.
 
 Release target:
 - PID has no still error
@@ -22,6 +22,7 @@ Pool:
 - liftTick does not look like a safe thing, use amplified clock everywhere?
 - Use event queue instead of polling
     - Remove tickable, useless
+    - Implement periodic behavior, like printing debugs
 - Templatization
 - It seems that code should be moved to header and templatized:
     - Long compilation time is not an issue, it's a helper to write mindfully.
