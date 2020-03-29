@@ -1,6 +1,11 @@
 build*
 *.pyc
 
+.idea/
+.vscode/
+proto/
+
+
 # Prerequisites
 *.d
 
