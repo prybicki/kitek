@@ -11,10 +11,15 @@ void Wheel::tick() {
     prevState = currState;
     currState = enc->getTicks();
     diff = currState - prevState;
+    
+    uint32_t now = gpioTick();
     if (targetSpeedSI.has_value()) {
-        auto pwm = pid->compute(*targetSpeedSI, getSpeed());
-        eng->setPWM(pwm);
+        if (*targetSpeedSI == 0.0f) {
+            pid->reset();
+        }
+        eng->setPWM(pid->compute(*targetSpeedSI, getSpeed(), now - lastUpdateTick));
     }
+    lastUpdateTick = now;
 }
 
 float Wheel::getMileage() // milleage
@@ -42,7 +47,6 @@ void Wheel::setSpeed(float speed)
         speed = 0.0f;
     }
     targetSpeedSI = speed * maxSpeed;
-
 }
 
 void Wheel::setPWM(float pwm)
@@ -64,5 +68,5 @@ std::optional<float> Wheel::getTargetSpeed()
 
 uint32_t Wheel::getLastUpdateTick()
 {
-    return getSpeed() == 0 ? gpioTick() : currState.timestamp;
+    return lastUpdateTick;
 }

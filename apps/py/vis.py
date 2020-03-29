@@ -12,9 +12,11 @@ from Protocol_pb2 import *
 
 SIDES = [Side.LEFT, Side.RIGHT]
 
-LOOP_HZ = 10
+LOOP_HZ = 30
 LOOP_PERIOD_MS = 1000.0 / LOOP_HZ
-TIME_WINDOW_SECS = 20
+TIME_WINDOW_SECS = 10
+
+# TODO solve problem of scrolling in the first TIME_WINDOW_SECS
 
 
 class UDPTransceiver:
@@ -94,16 +96,18 @@ class Base:
 
         self.pwm_plot = TimeSeriesPlot(keys=SIDES, pens=side_pens, time_window=TIME_WINDOW_SECS, title='Engine PWM')
         self.pwm_plot.setYRange(-1, 1)
-        self.win.addItem(self.pwm_plot)
+        self.win.addItem(self.pwm_plot, colspan=2)
         self.win.nextRow()
+        
 
         self.speed_plot = TimeSeriesPlot(keys=SIDES, pens=side_pens, time_window=TIME_WINDOW_SECS, title='Wheel Speed')
         self.speed_plot.setYRange(-0.5, 0.5)
-        self.speed_line = {side: self.speed_plot.addLine() for side in SIDES}
-        self.win.addItem(self.speed_plot)
+        self.speed_line = {side: self.speed_plot.addLine(y=0, pen=side_pens[side]) for side in SIDES}
+        self.win.addItem(self.speed_plot, colspan=2)
         self.win.nextRow()
 
-        pid_keys = ['pOut', 'iOut', 'dOut', 'error', 'integral']
+        pid_outs_keys = ['pOut', 'iOut', 'dOut']
+        pid_params_keys = ['error', 'integral']
         pid_pens = {
             'pOut': pg.mkPen(color='r'),
             'iOut': pg.mkPen(color='g'),
@@ -111,13 +115,21 @@ class Base:
             'error': pg.mkPen(color='y'),
             'integral': pg.mkPen(color='m'),
         }
-        self.pid_plot = TimeSeriesPlot(keys=pid_keys, pens=pid_pens, time_window=TIME_WINDOW_SECS, title='PID')
-        self.win.addItem(self.pid_plot)
+        self.pid_outs_plot = {}
+        self.pid_params_plot = {}
+        for side in SIDES:
+            self.pid_outs_plot[side] = TimeSeriesPlot(keys=pid_outs_keys, pens=pid_pens, time_window=TIME_WINDOW_SECS, title='PID Outs {}'.format(side))
+            self.pid_outs_plot[side].addLine(y=0, pen=pg.mkPen('w'))
+            self.win.addItem(self.pid_outs_plot[side])
+        self.win.nextRow()
+        for side in SIDES:
+            self.pid_params_plot[side] = TimeSeriesPlot(keys=pid_params_keys, pens=pid_pens, time_window=TIME_WINDOW_SECS, title='PID Params {}'.format(side))
+            self.pid_params_plot[side].addLine(y=0, pen=pg.mkPen('w'))
+            self.win.addItem(self.pid_params_plot[side])
         self.win.nextRow()
 
         self.udp = UDPTransceiver(4096)
         self.tasks.add(self.process_input)
-
     def process_input(self):
         msg = KitekMsg()
         for byteMsg in self.udp.get_msgs():
@@ -127,13 +139,13 @@ class Base:
                 self.pwm_plot.append(w.side, w.timestamp, w.pwm)
                 self.speed_plot.append(w.side, w.timestamp, w.speed)
                 self.speed_line[w.side].setValue(w.targetSpeed)
-            if msg.HasField('pidState') and msg.pidState.side == Side.LEFT:
+            if msg.HasField('pidState'):
                 p = msg.pidState
-                # self.pid_plot.append('pOut', p.timestamp, p.pOut)
-                # self.pid_plot.append('iOut', p.timestamp, p.iOut)
-                # self.pid_plot.append('dOut', p.timestamp, p.dOut)
-                # self.pid_plot.append('error', p.timestamp, p.error)
-                self.pid_plot.append('integral', p.timestamp, p.integral)
+                self.pid_outs_plot[p.side].append('pOut', p.timestamp, p.pOut)
+                self.pid_outs_plot[p.side].append('iOut', p.timestamp, p.iOut)
+                self.pid_outs_plot[p.side].append('dOut', p.timestamp, p.dOut)
+                self.pid_params_plot[p.side].append('error', p.timestamp, p.error)
+                self.pid_params_plot[p.side].append('integral', p.timestamp, p.integral)
             
             # ADD horizontal line
             # self.speed_target[msg.wheelState.side].setValue(msg.wheelState.targetSpeed)

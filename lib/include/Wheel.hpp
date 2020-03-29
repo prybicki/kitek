@@ -30,6 +30,7 @@ private:
 	int ticksPerRev;
 	float maxSpeed;
 	float wheelDiameter;
+	uint32_t lastUpdateTick;
 	std::optional<float> targetSpeedSI;
 
 	float ticksToDist(int ticks);

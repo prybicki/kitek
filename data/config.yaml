@@ -36,7 +36,7 @@ encR: {
 wheel: {
   ticksPerRev: 3840,
   diameter: 0.08,
-  maxSpeed: 0.3,
+  maxSpeed: 0.4,
 }
 
 servo: {

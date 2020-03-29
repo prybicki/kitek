@@ -11,5 +11,6 @@ private:
 	int pinIn1;
 	int pinIn2;
 	int pinEnable;
+	float currentPWM;
 	bool reversed;
 };

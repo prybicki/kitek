@@ -1,6 +1,8 @@
 For now, PID is reasonably good within 0.3 m/s speed limit.
 In future try to understand the way the integral behaves.
 Additionally, figure out a way to treat both wheels as single system, not separate control loops.
+Integral can be increased by turning the wheel manually or driving in half stall
+
 
 Release target:
 - PID has no still error
@@ -19,6 +21,11 @@ Release target:
 - Timeouts (speed!)
 
 Pool:
+- Differential voltage measurement (5V vs 8.4 battery -> 0, 3.4V range)
+    - It can help with diagnosing bad 5V voltage (but what if there's sudden diff overvoltage?)
+- Feature to stop the world (charts)
+    - + Recording in the base?
+- Fix the nasty joy bug (sticking to -1)
 - liftTick does not look like a safe thing, use amplified clock everywhere?
 - Use event queue instead of polling
     - Remove tickable, useless

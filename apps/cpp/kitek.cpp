@@ -111,10 +111,10 @@ int main(int argc, char** argv)
 		
 		for (auto&& side : sides) {
 			auto&& targetSpeed = hw.wheel.at(side)->getTargetSpeed();
-			if (targetSpeed.has_value()) {
+			// if (targetSpeed.has_value()) {
 				PIDState* pidState = msg.mutable_pidstate();
 				pidState->set_side(side);
-				pidState->set_timestamp(clock.liftTick(hw.pid.at(side)->lastUpdateTick));
+				pidState->set_timestamp(clock.liftTick(hw.wheel.at(side)->getLastUpdateTick()));
 				pidState->set_integral(hw.pid.at(side)->integral);
 				pidState->set_error(hw.pid.at(side)->error);
 				pidState->set_pout(hw.pid.at(side)->pOut);
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 				pidState->set_iout(hw.pid.at(side)->iOut);
 				msg.SerializeToString(&protocolBuffer);
 				udp.sendMsg(protocolBuffer);
-			}
+			// }
 		}
 
 		hw.ledG->set(true);

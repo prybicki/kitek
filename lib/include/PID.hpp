@@ -10,17 +10,18 @@ struct PID
 	float min;
 	float max;
 	float prevError = 0.0f;
+	float prevTarget = 0.0f;
 	float integral = 0.0f;
-	uint32_t lastUpdateTick = 0;
 
-	float error;
-	float pOut;
-	float iOut;
-	float dOut;
-	float outRaw;
+	float error = 0.0f;
+	float pOut = 0.0f;
+	float iOut = 0.0f;
+	float dOut = 0.0f;
+	float outRaw = 0.0f;
 
 	PID(float p, float i, float d, float min, float max);
-	float compute(float target, float current);
+	// last update tick is usually related to current value, hence it's external
+	float compute(float target, float current, uint32_t dtUsec);
 	void config(float p, float i, float d);
 	void reset();
 };
