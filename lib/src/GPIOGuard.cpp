@@ -18,7 +18,8 @@ GPIOGuard::GPIOGuard(bool debug)
     }
 
     if (debug) {
-        gpioCfgInternals(984762879, 4);
+        throw std::logic_error("unimplemented, fixme");
+//        gpioCfgInternals(984762879, 4);
     }
 
 	int v = gpioInitialise();

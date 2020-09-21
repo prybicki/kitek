@@ -3,7 +3,7 @@ project(robotics CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(protobuf REQUIRED)
+find_package(Protobuf REQUIRED)
 find_package(pigpio REQUIRED)
 find_package(libevdev REQUIRED)
 find_package(yaml-cpp REQUIRED)
